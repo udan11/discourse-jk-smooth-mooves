@@ -1,0 +1,59 @@
+<script type="text/discourse-plugin" version="0.1">
+const kbd = require("discourse/lib/keyboard-shortcuts").default;
+const minimumOffset = require("discourse/lib/offset-calculator").minimumOffset;
+
+kbd._moveSelection = function(direction) {
+  const $articles = this._findArticles();
+
+  if (typeof $articles === "undefined") return;
+
+  const $selected =
+    $articles.filter(".selected").length !== 0
+      ? $articles.filter(".selected")
+      : $articles.filter("[data-islastviewedtopic=true]");
+
+  let index = $articles.index($selected);
+
+  if ($selected.length !== 0) {
+    if (direction === -1 && index === 0) return;
+    if (direction === 1 && index === $articles.length - 1) return;
+  }
+
+  // when nothing is selected
+  if ($selected.length === 0) {
+    // select the first post with its top visible
+    const offset = minimumOffset();
+    index = $articles
+      .toArray()
+      .findIndex(article => article.getBoundingClientRect().top > offset);
+    direction = 0;
+  }
+
+  const $article = $articles.eq(index + direction);
+
+  if ($article.length > 0) {
+    $articles.removeClass("selected");
+    $article.addClass("selected");
+
+    if ($article.is(".topic-post")) {
+      this._scrollToPost($article);
+    } else {
+      this._scrollList($article, direction);
+    }
+  }
+};
+
+kbd._scrollToPost = function($article) {
+  const scrollTop =
+    $article.find("#post_1").length > 0
+      ? 0
+      : $article.offset().top - minimumOffset();
+  $("html, body").animate(
+    { scrollTop },
+    {
+      duration: 100,
+      complete: () => $("a.tabLoc", $article).focus()
+    }
+  );
+};
+</script>
