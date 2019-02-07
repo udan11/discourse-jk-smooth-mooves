@@ -29,6 +29,35 @@ kbd._moveSelection = function(direction) {
     direction = 0;
   }
 
+  // if current post is not entirely visible in viewport
+  if ($selected.length !== 0) {
+    const $article = $articles.eq(index);
+    if ($article.length > 0) {
+      const margin = 2.5 * minimumOffset();
+      /** @var begin and end offsets for current post */
+      const beginArticle = $article.offset().top;
+      const endArticle =
+        beginArticle + $article[0].getBoundingClientRect().height;
+      /** @var begin and end offsets for current viewport */
+      const beginScreen = $(window).scrollTop();
+      const endScreen = beginScreen + window.innerHeight;
+      // first part of the post is not visible
+      if (direction < 0 && beginScreen > beginArticle) {
+        return $("html, body").animate(
+          { scrollTop: beginScreen - window.innerHeight + margin },
+          { duration: 100 }
+        );
+      }
+      // last part of the post is not visible
+      else if (direction > 0 && endScreen < endArticle) {
+        return $("html, body").animate(
+          { scrollTop: endScreen - margin },
+          { duration: 100 }
+        );
+      }
+    }
+  }
+
   const $article = $articles.eq(index + direction);
 
   if ($article.length > 0) {
